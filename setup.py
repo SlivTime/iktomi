@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='insanities',
-    version='0.3',
+    version='0.4',
     packages=['insanities', 'insanities.utils', 'insanities.forms',
               'insanities.web', 'insanities.templates', 'insanities.templates.mint',
               'insanities.templates.jinja2'],
