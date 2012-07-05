@@ -4,7 +4,7 @@ class VariableStorage(dict):
 
     def as_dict(self):
         # for compatibility
-        return self
+        return dict(self)
 
     def __getattr__(self, k):
         return self[k]
@@ -19,7 +19,7 @@ class VariableStorage(dict):
         return repr(self._dict_)
 
     def __call__(self, **kwargs):
-        self.__dict__.update(**kwargs)
+        self.update(**kwargs)
         return self
 
 
