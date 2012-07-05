@@ -8,7 +8,7 @@ import httplib
 import functools
 from webob.exc import HTTPException
 from .http import Request, Response, RouteState
-from ..utils.storage import VersionedStorage
+from ..utils.storage import VariableStorage
 
 from copy import copy
 
@@ -75,11 +75,11 @@ class WebHandler(object):
         from .reverse import Reverse
         root = Reverse.from_handler(self)
         def wsgi(environ, start_response):
-            env = VersionedStorage()
+            env = VariableStorage()
             env.request = Request(environ, charset='utf-8')
             env.root = root
             env._route_state = RouteState(env.request)
-            data = VersionedStorage()
+            data = VariableStorage()
             try:
                 response = self(env, data)
                 if response is None:

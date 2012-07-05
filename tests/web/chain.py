@@ -5,10 +5,10 @@ __all__ = ['Chain']
 import unittest
 from insanities import web
 from insanities.web.core import _FunctionWrapper
-from insanities.utils.storage import VersionedStorage
+from insanities.utils.storage import VariableStorage
 
 skip = getattr(unittest, 'skip', lambda x: None)
-VS = VersionedStorage
+VS = VariableStorage
 
 class Chain(unittest.TestCase):
 
@@ -65,7 +65,7 @@ class Chain(unittest.TestCase):
             return nh(env, data)
 
         chain = web.cases(h1, h2, h3)
-        count = VersionedStorage(count=0)
+        count = VS(count=0)
         self.assert_(chain(count, VS()) is None)
         self.assertEqual(count['count'], 0)
 
