@@ -185,10 +185,7 @@ class namespace(WebHandler):
             env.namespace += '.' + self.namespace
         else:
             env.namespace = self.namespace
-        result = next_handler(env, data)
-        if result is not None:
-            return result
-        raise RouteError('namespace handler can not return None')
+        return next_handler(env, data)
 
     def _locations(self):
         return {self.namespace: (Location(), super(namespace, self)._locations())}

@@ -6,6 +6,7 @@ import unittest
 from insanities import web
 from insanities.web.url_templates import UrlTemplate
 from insanities.web.http import Request, Response
+from webob.exc import HTTPNotFound
 
 
 class UrlTemplateTests(unittest.TestCase):
@@ -105,11 +106,11 @@ class Prefix(unittest.TestCase):
                     web.match('/', 'tags') | handler,
                     web.match('/tag', 'tag') | handler)))
 
-        self.assertEqual(web.ask(app, '/docs'), None)
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs')
         self.assertEqual(web.ask(app, '/docs/').status_int, 200)
-        self.assertEqual(web.ask(app, '/docs/tags'), None)
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs/tags')
         self.assertEqual(web.ask(app, '/docs/tags/').status_int, 200)
-        self.assertEqual(web.ask(app, '/docs/tags/asdasd'), None)
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs/tags/asdasd')
 
     def test_prefix_leaf(self):
         '''Simple prefix'''
@@ -145,9 +146,9 @@ class Prefix(unittest.TestCase):
                 ),
             web.match('/something', 'something') | handler)
 
-        self.assertEqual(web.ask(app, '/docs/something'), None)
-        self.assertEqual(web.ask(app, '/docs/list/something'), None)
-        self.assertEqual(web.ask(app, '/docs/list/other-thing'), None)
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs/something')
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs/list/something')
+        self.assertRaises(HTTPNotFound, web.ask, app, '/docs/list/other-thing')
 
 
     def test_unicode(self):
@@ -179,21 +180,26 @@ class Subdomain(unittest.TestCase):
             self.assertEqual(env.request.path, '/')
             return Response()
 
-        app = web.subdomain('host') | web.cases(
-            web.subdomain('') | web.match('/', 'index') | handler,
-            web.subdomain('k') | web.cases(
-                web.subdomain('l') | web.cases(
-                    web.match('/', 'l') | handler,
-                ),
-                web.subdomain('') | web.match('/', 'k') | handler))
+        def raise404(env, data, nx):
+            raise HTTPNotFound
+
+        app = web.cases(
+            web.subdomain('host') | web.cases(
+                web.subdomain('') | web.match('/', 'index') | handler,
+                web.subdomain('k') | web.cases(
+                    web.subdomain('l') | web.cases(
+                        web.match('/', 'l') | handler,
+                    ),
+                    web.subdomain('') | web.match('/', 'k') | handler)),
+            raise404)
 
         self.assertEqual(web.ask(app, 'http://host/').status_int, 200)
         self.assertEqual(web.ask(app, 'http://k.host/').status_int, 200)
         self.assertEqual(web.ask(app, 'http://l.k.host/').status_int, 200)
         self.assertEqual(web.ask(app, 'http://x.l.k.host/').status_int, 200)
-        self.assert_(web.ask(app, 'http://x.k.host/') is None)
-        self.assert_(web.ask(app, 'http://lk.host/') is None)
-        self.assert_(web.ask(app, 'http://mhost/') is None)
+        self.assertRaises(HTTPNotFound, web.ask, app, 'http://x.k.host/')
+        self.assertRaises(HTTPNotFound, web.ask, app, 'http://lk.host/')
+        self.assertRaises(HTTPNotFound, web.ask, app, 'http://mhost/')
 
     def test_unicode(self):
         '''IRI tests'''
