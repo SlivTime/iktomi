@@ -7,6 +7,8 @@ import logging
 import mimetypes
 from os import path
 from urllib import unquote
+from webob.exc import HTTPNotFound
+
 from .core import WebHandler
 from .http import Response
 from .url_templates import UrlTemplate
@@ -21,6 +23,9 @@ def update_data(data, new_data):
         data[k] = v
 
 
+class RouteError(Exception): pass
+
+
 class match(WebHandler):
 
     def __init__(self, url='', name='', convs=None):
@@ -32,7 +37,10 @@ class match(WebHandler):
             if matched:
                 env.current_url_name = self.url_name
                 update_data(data, kwargs)
-                return next_handler(env, data)
+                result = next_handler(env, data)
+                if result is not None:
+                    return result
+                raise RouteError('match handler can not return None')
             return None
         self.handle = match
 
@@ -121,7 +129,8 @@ class prefix(WebHandler):
                 result = next_handler(env, data)
                 if result is not None:
                     return result
-                env._route_state.pop_prefix()
+                raise HTTPNotFound()
+                #env._route_state.pop_prefix()
             return None
         self.handle = prefix
 
@@ -150,7 +159,10 @@ class subdomain(WebHandler):
                 matches = not subdomain
             if matches:
                 env._route_state.add_subdomain(self.subdomain)
-                return next_handler(env, data)
+                result = next_handler(env, data)
+                if result is not None:
+                    return result
+                raise HTTPNotFound()
             return None
         self.handle = subdomain
 
