@@ -5,6 +5,8 @@ import hashlib
 import logging
 logger = logging.getLogger(__name__)
 
+from webob.exc import HTTPMethodNotAllowed
+from webob import Response
 
 from insanities import web
 from insanities.forms import *
@@ -126,13 +128,16 @@ class CookieAuth(web.WebHandler):
         url and does not throw any exception.
         '''
         def _logout(env, data, next_handler):
+            if env.request.method != 'POST':
+                raise HTTPMethodNotAllowed()
             if self._cookie_name in env.request.cookies:
                 response = self.logout_user(env.request)
-                response.status = 303
-                response.headers['Location'] = str(redirect_to)
-                return response
-            return next_handler(env, data)
-        return web.match('/logout', 'logout') | web.method('post') | _logout
+            else:
+                response = Response()
+            response.status = 303
+            response.headers['Location'] = str(redirect_to)
+            return response
+        return web.match('/logout', 'logout') | _logout
 
 
 def auth_required(env, data, next_handler):

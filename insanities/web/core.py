@@ -51,15 +51,7 @@ class WebHandler(object):
 
     def __call__(self, env, data):
         next_handler = self.get_next()
-        env._commit()
-        data._commit()
-        result = self.handle(env, data, next_handler)
-        if result is None:
-            if env._modified:
-                env._rollback()
-            if data._modified:
-                data._rollback()
-        return result
+        return self.handle(env, data, next_handler)
 
     def get_next(self):
         if hasattr(self, '_next_handler'):

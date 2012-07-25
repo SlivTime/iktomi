@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from webob.exc import HTTPMethodNotAllowed
 from insanities import web
 from insanities.auth import CookieAuth, SqlaModelAuth, auth_required, encrypt_password
 
@@ -87,12 +88,13 @@ class CookieAuthTests(unittest.TestCase):
     def test_logout_anonymouse(self):
         '`Auth` logout of anonymouse'
         response = web.ask(self.app, '/logout', data={})
-        self.assertEqual(response, None)
+        self.assertEqual(response.status_int, 303)
+        self.assertEqual(response.headers['Location'], '/')
+        self.assert_('Set-Cookie' not in response.headers)
 
     def test_logout_by_get(self):
         '`Auth` logout by GET metod'
-        response = web.ask(self.app, '/logout')
-        self.assertEqual(response, None)
+        self.assertRaises(HTTPMethodNotAllowed, web.ask, self.app, '/logout')
 
     def test_logout(self):
         '`Auth` logout of logined user'
