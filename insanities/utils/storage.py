@@ -9,7 +9,7 @@ class VariableStorage(dict):
     def __getattr__(self, k):
         return self[k]
 
-    def __delattribute__(self, k):
+    def __delattr__(self, k):
         del self[k]
 
     def __setattr__(self, k, v):
