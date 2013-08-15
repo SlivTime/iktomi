@@ -7,7 +7,7 @@
     </td>
   </tr>
   {% endif %}
-  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if subwidget.widget.classname is defined %} {{ subwidget.widget.classname }}{% endif %}">
+  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if subwidget.classname is defined %} {{ subwidget.classname }}{% endif %}">
   {% if subwidget.render_type == 'checkbox' %}
     <th></th>
     <td>

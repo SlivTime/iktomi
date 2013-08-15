@@ -222,6 +222,9 @@ class NoFieldWidget(Widget):
         data = self.prepare_data()
         return self.env.template.render(self.template, **data)
 
+    def prepare_data(self):
+        return dict(widget=self)
+
     def __call__(self, **kwargs):
         kwargs = dict(self._init_kwargs, **kwargs)
         kwargs.setdefault('parent', self.parent)
@@ -236,6 +239,7 @@ class FieldBlock(NoFieldWidget):
     open_with_data = False
     opened = True
     prefix = ''
+    render_type = 'full-width'
 
     def __init__(self, title, fields=[], **kwargs):
         if kwargs.get('parent'):
@@ -246,6 +250,11 @@ class FieldBlock(NoFieldWidget):
             fields=fields,
         ))
         NoFieldWidget.__init__(self, **kwargs)
+
+        # XXX
+        from .fields import _get_fields, _get_widgets
+        self.widgets = _get_widgets(self.fields)
+        self.fields = _get_fields(self.fields)
 
     @cached_property
     def classname(self):

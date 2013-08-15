@@ -23,7 +23,7 @@ class BaseField(object):
     '''
 
     # obsolete parameters from previous versions
-    _obsolete = frozenset(['default', 'get_default'])
+    _obsolete = frozenset(['default', 'get_default', 'template'])
 
     #: :class:`FieldPerm` instance determining field's access permissions.
     #: Can be set by field inheritance or throught constructor.
@@ -373,7 +373,7 @@ def _get_fields(lst):
 def _get_widgets(lst):
     ws = []
     for field in lst:
-        if isinstance(field, Field) and field.widget:
+        if isinstance(field, BaseField) and field.widget:
             ws.append(field.widget)
         elif isinstance(field, widgets.NoFieldWidget):
             ws.append(field)
