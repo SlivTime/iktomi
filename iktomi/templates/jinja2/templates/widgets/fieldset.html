@@ -1,38 +1,38 @@
 <table class="fieldset">
-{% for subfield in field.fields %}
-  {% if subfield.error %}
+{% for subwidget in field.widgets %}
+  {% if subwidget.error %}
   <tr class="error-row">
     <td colspan="2">
-      <span class="error">{{ subfield.error }}</span>
+      <span class="error">{{ subwidget.error }}</span>
     </td>
   </tr>
   {% endif %}
-  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if subfield.widget.classname is defined %} {{ subfield.widget.classname }}{% endif %}">
-  {% if subfield.render_type == 'checkbox' %}
+  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if subwidget.widget.classname is defined %} {{ subwidget.widget.classname }}{% endif %}">
+  {% if subwidget.render_type == 'checkbox' %}
     <th></th>
     <td>
-      {{ subfield.render()|safe }}
-      {% if subfield.label %}
-      <label for="{{ subfield.id }}">{{ subfield.label }}</label>
+      {{ subwidget.render()|safe }}
+      {% if subwidget.label %}
+      <label for="{{ subwidget.id }}">{{ subwidget.label }}</label>
       {% endif %}
     </td>
-  {% elif subfield.render_type == 'hidden' %}
-    <td style="display: none" colspan="2">{{ subfield.render()|safe }}</td>
-  {% elif subfield.render_type == 'full-width' %}
+  {% elif subwidget.render_type == 'hidden' %}
+    <td style="display: none" colspan="2">{{ subwidget.render()|safe }}</td>
+  {% elif subwidget.render_type == 'full-width' %}
     <td colspan="2">
-      {% if subfield.label %}
-      <p class="th"><label for="{{ subfield.id }}">{{ subfield.label }}</label></p>
+      {% if subwidget.label %}
+      <p class="th"><label for="{{ subwidget.id }}">{{ subwidget.label }}</label></p>
       {% endif %}
-      {{ subfield.render()|safe }}
+      {{ subwidget.render()|safe }}
     </td>
   {% else %}
     <th>
-      {% if subfield.label %}
-      <label for="{{ subfield.id }}">{{ subfield.label }}</label>
+      {% if subwidget.label %}
+      <label for="{{ subwidget.id }}">{{ subwidget.label }}</label>
       {% endif %}
     </th>
     <td>
-      {{ subfield.render()|safe }}
+      {{ subwidget.render()|safe }}
     </td>
   {% endif %}
   </tr>

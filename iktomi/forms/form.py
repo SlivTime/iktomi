@@ -9,6 +9,7 @@ from ..utils import weakproxy, cached_property
 from . import convs
 from .perms import DEFAULT_PERMISSIONS
 from .media import FormMedia
+from .fields import _get_fields, _get_widgets
 
 
 class FormEnvironment(object):
@@ -47,8 +48,11 @@ class Form(object):
         #       aggregated field, including `None` as empty values.
         self.initial = initial
         self.python_data = initial.copy()
+
         # clone all fields
         self.fields = [field(parent=self) for field in self.fields]
+        self.widgets = _get_widgets(self.fields)
+        self.fields = _get_fields(self.fields)
 
         if permissions is None:
             permissions = self.permissions

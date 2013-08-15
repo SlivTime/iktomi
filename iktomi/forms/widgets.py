@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from ..utils import weakproxy
+from ..utils import weakproxy, cached_property
+from ..utils.deprecation import deprecated
 from . import convs
-from .media import FormMedia, FormCSSRef, FormJSRef
+from .media import FormMedia
 
 class Widget(object):
 
@@ -26,9 +27,13 @@ class Widget(object):
         self._init_kwargs = kwargs
         self.__dict__.update(kwargs)
 
+    @cached_property
+    def parent(self):
+        return self.field
+
     @property
     def multiple(self):
-        return self.field.multiple
+        return self.parent.multiple
 
     @property
     def input_name(self):
@@ -39,26 +44,39 @@ class Widget(object):
         return self.field.id
 
     @property
+    def error(self):
+        return self.field.error
+
+    @property
     def env(self):
-        return self.field.env
+        return self.parent.env
+
+    @cached_property
+    def label(self):
+        return self.field.label
 
     def get_media(self):
         return FormMedia(self.media)
 
-    def prepare_data(self, value):
+    def prepare_data(self):
         '''
         Method returning data passed to template.
         Subclasses can override it.
         '''
+        value = self.get_raw_value()
         return dict(widget=self,
+                    field=self.field,
                     value=value,
                     readonly=not self.field.writable)
 
-    def render(self, value):
+    def get_raw_value(self):
+        return self.field.raw_value
+
+    def render(self):
         '''
         Renders widget to template
         '''
-        data = self.prepare_data(value)
+        data = self.prepare_data()
         if self.field.readable:
             return self.env.template.render(self.template, **data)
         return ''
@@ -107,7 +125,7 @@ class Select(Widget):
 
     def get_options(self, value):
         options = []
-        if not self.multiple and (value is None or not self.field.conv.required):
+        if not self.multiple and (value == '' or not self.field.conv.required):
             options = [{'value': '',
                         'title': self.null_label,
                         'selected': value in (None, '')}]
@@ -126,10 +144,10 @@ class Select(Widget):
                                 selected=(choice in values)))
         return options
 
-    def prepare_data(self, value):
-        data = Widget.prepare_data(self, value)
+    def prepare_data(self):
+        data = Widget.prepare_data(self)
         return dict(data,
-                    options=self.get_options(value),
+                    options=self.get_options(data['value']),
                     required=('true' if self.field.conv.required else 'false'))
 
 
@@ -155,14 +173,98 @@ class CharDisplay(Widget):
     #: Function converting the value to string.
     getter = staticmethod(lambda v: v)
 
-    def prepare_data(self, value):
-        data = Widget.prepare_data(self, value)
+    def prepare_data(self):
+        data = Widget.prepare_data(self)
         return dict(data,
-                    value=self.getter(value),
+                    value=self.getter(data['value']),
                     should_escape=self.escape)
 
 
 class FileInput(Widget):
 
     template = 'widgets/file'
+
+
+class AggregateWidget(Widget):
+
+    def get_raw_value(self):
+        return None
+
+
+class FieldListWidget(AggregateWidget):
+
+    template = 'widgets/fieldlist'
+
+
+class FieldSetWidget(AggregateWidget):
+
+    template = 'widgets/fieldset'
+
+
+class NoFieldWidget(Widget):
+
+    multiple = None
+    input_name = None
+    id = '' # XXX
+    field = None
+    label = None
+    error = None
+
+    def __init__(self, parent=None, **kwargs):
+        self.parent = weakproxy(parent)
+        self._init_kwargs = kwargs
+        self.__dict__.update(kwargs)
+
+    def get_raw_value(self):
+        return None
+
+    def render(self):
+        data = self.prepare_data()
+        return self.env.template.render(self.template, **data)
+
+    def __call__(self, **kwargs):
+        kwargs = dict(self._init_kwargs, **kwargs)
+        kwargs.setdefault('parent', self.parent)
+        return self.__class__(**kwargs)
+
+
+class FieldBlock(NoFieldWidget):
+
+    template = 'widgets/collapsable_block'
+    classname_defaults = {'close': 'collapsable closed',
+                          'open': 'collapsable'}
+    open_with_data = False
+    opened = True
+    prefix = ''
+
+    def __init__(self, title, fields=[], **kwargs):
+        if kwargs.get('parent'):
+            parent = kwargs['parent']
+            fields = [field(parent=parent) for field in fields]
+        kwargs.update(dict(
+            title=title,
+            fields=fields,
+        ))
+        NoFieldWidget.__init__(self, **kwargs)
+
+    @cached_property
+    def classname(self):
+        if self.open_with_data or self.opened:
+            for f in self.fields:
+                if self.opened or self.form.python_data[f.name]:
+                    return self.classname_defaults['open']
+        return self.classname_defaults['close']
+
+    def __add__(self, x):
+        # XXX is this needed?
+        return [self] + x
+
+    def __radd__(self, x):
+        # XXX is this needed?
+        return x + [self]
+
+
+field_block = FieldBlock
+#field_block = deprecated('field_block() is deprecated. Use FieldBlock instead')(FieldBlock)
+
 

@@ -31,7 +31,7 @@ class BaseField(object):
 
     # defaults
     conv = convs.Char
-    widget = widgets.TextInput()
+    widget = widgets.TextInput
     label = None
     media = FormMedia()
 
@@ -118,7 +118,7 @@ class BaseField(object):
         return self.widget.render_type
 
     def render(self):
-        return self.widget.render(self.raw_value)
+        return self.widget.render()
 
     def get_media(self):
         media = FormMedia(self.media)
@@ -194,20 +194,20 @@ class FieldSet(AggregateField):
     '''
     Container field aggregating a couple of other different fields
     '''
-    template = 'widgets/fieldset'
-    render_type = 'default'
     conv = convs.Converter
+    widget = widgets.FieldSetWidget
 
     def __init__(self, name, conv=None, fields=[], **kwargs):
         if kwargs.get('parent'):
-            conv = (conv or self.conv)(field=self)
             fields = [field(parent=self) for field in fields]
         kwargs.update(dict(
             name=name,
             conv=conv,
-            fields=fields,
-        ))
+            fields=fields))
         BaseField.__init__(self, **kwargs)
+
+        self.widgets = _get_widgets(self.fields)
+        self.fields = _get_fields(self.fields)
 
     @property
     def prefix(self):
@@ -245,9 +245,6 @@ class FieldSet(AggregateField):
                                     field.from_python(result[field.name]))
         return self.conv.accept(result)
 
-    def render(self):
-        return self.env.template.render(self.template, field=self)
-
     def get_media(self):
         media = BaseField.get_media(self)
         for field in self.fields:
@@ -261,20 +258,15 @@ class FieldList(AggregateField):
     '''
 
     order = False
-    template = 'fields/fieldlist'
-    render_type = 'default'
     conv = convs.List
+    widget = widgets.FieldListWidget
     _digit_re = re.compile('\d+$')
 
-    def __init__(self, name, conv=None, field=Field(None),
-                 parent=None, **kwargs):
-        if parent:
-            conv = (conv or self.conv)(field=self)
+    def __init__(self, name, field=Field(None), **kwargs):
+        if kwargs.get('parent'):
             field = field(parent=self)
         kwargs.update(dict(
-            parent=parent,
             name=name,
-            conv=conv,
             field=field,
         ))
         BaseField.__init__(self, **kwargs)
@@ -341,10 +333,6 @@ class FieldList(AggregateField):
                             field.from_python(field.get_initial()))
         return field.render()
 
-
-    def render(self):
-        return self.env.template.render(self.template, field=self)
-
     def get_media(self):
         media = BaseField.get_media(self)
         media += self.field.get_media()
@@ -373,3 +361,20 @@ class FileField(Field):
         return True
 
 
+def _get_fields(lst):
+    fields = []
+    for field in lst:
+        if isinstance(field, BaseField):
+            fields.append(field)
+        elif isinstance(field, widgets.FieldBlock):
+            fields += field.fields
+    return fields
+
+def _get_widgets(lst):
+    ws = []
+    for field in lst:
+        if isinstance(field, Field) and field.widget:
+            ws.append(field.widget)
+        elif isinstance(field, widgets.NoFieldWidget):
+            ws.append(field)
+    return ws

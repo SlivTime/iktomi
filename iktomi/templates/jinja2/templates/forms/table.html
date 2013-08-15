@@ -1,37 +1,37 @@
-{% for field in form.fields %}
-  {% if field.error %}
+{% for widget in form.widgets %}
+  {% if widget.error %}
   <tr class="error-row">
     <td colspan="2">
-      <span class="error">{{ field.error }}</span>
+      <span class="error">{{ widget.error }}</span>
     </td>
   </tr>
   {% endif %}
-  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if field.classname %} {{ field.classname }}{% endif %}">
-  {% if field.render_type == 'checkbox' %}
+  <tr class="form-row{% if loop.last %} last{% endif %}{% if loop.first %} first{% endif %}{% if widget.classname %} {{ widget.classname }}{% endif %}">
+  {% if widget.render_type == 'checkbox' %}
     <th></th>
     <td>
-      {{ field.render()|safe }}
-      {% if field.label %}
-      <label for="{{ field.id }}">{{ field.label }}</label>
+      {{ widget.render()|safe }}
+      {% if widget.label %}
+      <label for="{{ widget.id }}">{{ widget.label }}</label>
       {% endif %}
     </td>
-  {% elif field.render_type == 'hidden' %}
-    <td style="display: none" colspan="2">{{ field.render()|safe }}</td>
-  {% elif field.render_type == 'full-width' %}
+  {% elif widget.render_type == 'hidden' %}
+    <td style="display: none" colspan="2">{{ widget.render()|safe }}</td>
+  {% elif widget.render_type == 'full-width' %}
     <td colspan="2">
-      {% if field.label %}
-      <p class="th"><label for="{{ field.id }}">{{ field.label }}</label></p>
+      {% if widget.label %}
+      <p class="th"><label for="{{ widget.id }}">{{ widget.label }}</label></p>
       {% endif %}
-      {{ field.render()|safe }}
+      {{ widget.render()|safe }}
     </td>
   {% else %}
     <th>
-      {% if field.label %}
-      <label for="{{ field.id }}">{{ field.label }}</label>
+      {% if widget.label %}
+      <label for="{{ widget.id }}">{{ widget.label }}</label>
       {% endif %}
     </th>
     <td>
-      {{ field.render()|safe }}
+      {{ widget.render()|safe }}
     </td>
   {% endif %}
 

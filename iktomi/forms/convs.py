@@ -536,7 +536,14 @@ class ListOf(Converter):
 
     multiple = True
 
-    def __init__(self, conv, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        if args and (isinstance(args[0], Converter) or \
+                     (isinstance(args[0], type) and \
+                      issubclass(args[0], Converter))):
+            conv = args[0]
+            args = args[1:]
+        else:
+            conv = kwargs['conv']
         if 'field' in kwargs:
             conv = conv(field=kwargs['field'])
         kwargs['conv'] = conv
