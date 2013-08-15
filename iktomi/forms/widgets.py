@@ -4,6 +4,7 @@ from ..utils import weakproxy, cached_property
 from ..utils.deprecation import deprecated
 from . import convs
 from .media import FormMedia
+from .base import HasFields
 
 class Widget(object):
 
@@ -231,14 +232,9 @@ class NoFieldWidget(Widget):
         return self.__class__(**kwargs)
 
 
-class FieldBlock(NoFieldWidget):
+class FieldBlock(NoFieldWidget, HasFields):
 
-    template = 'widgets/collapsable_block'
-    classname_defaults = {'close': 'collapsable closed',
-                          'open': 'collapsable'}
-    open_with_data = False
-    opened = True
-    prefix = ''
+    template = 'widgets/fieldblock'
     render_type = 'full-width'
 
     def __init__(self, title, fields=[], **kwargs):
@@ -250,19 +246,7 @@ class FieldBlock(NoFieldWidget):
             fields=fields,
         ))
         NoFieldWidget.__init__(self, **kwargs)
-
-        # XXX
-        from .fields import _get_fields, _get_widgets
-        self.widgets = _get_widgets(self.fields)
-        self.fields = _get_fields(self.fields)
-
-    @cached_property
-    def classname(self):
-        if self.open_with_data or self.opened:
-            for f in self.fields:
-                if self.opened or self.form.python_data[f.name]:
-                    return self.classname_defaults['open']
-        return self.classname_defaults['close']
+        HasFields.__init__(self)
 
     def __add__(self, x):
         # XXX is this needed?
@@ -273,7 +257,6 @@ class FieldBlock(NoFieldWidget):
         return x + [self]
 
 
-field_block = FieldBlock
-#field_block = deprecated('field_block() is deprecated. Use FieldBlock instead')(FieldBlock)
+field_block = deprecated('field_block() is deprecated. Use FieldBlock instead')(FieldBlock)
 
 

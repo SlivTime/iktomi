@@ -10,6 +10,7 @@ from ..utils import cached_property
 from ..utils.odict import OrderedDict
 from .perms import FieldPerm
 from .media import FormMedia
+from .base import HasFields
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +191,7 @@ class AggregateField(BaseField):
         return self.from_python(value)
 
 
-class FieldSet(AggregateField):
+class FieldSet(AggregateField, HasFields):
     '''
     Container field aggregating a couple of other different fields
     '''
@@ -205,9 +206,7 @@ class FieldSet(AggregateField):
             conv=conv,
             fields=fields))
         BaseField.__init__(self, **kwargs)
-
-        self.widgets = _get_widgets(self.fields)
-        self.fields = _get_fields(self.fields)
+        HasFields.__init__(self)
 
     @property
     def prefix(self):
@@ -361,20 +360,4 @@ class FileField(Field):
         return True
 
 
-def _get_fields(lst):
-    fields = []
-    for field in lst:
-        if isinstance(field, BaseField):
-            fields.append(field)
-        elif isinstance(field, widgets.FieldBlock):
-            fields += field.fields
-    return fields
 
-def _get_widgets(lst):
-    ws = []
-    for field in lst:
-        if isinstance(field, BaseField) and field.widget:
-            ws.append(field.widget)
-        elif isinstance(field, widgets.NoFieldWidget):
-            ws.append(field)
-    return ws

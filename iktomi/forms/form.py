@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from time import time
-import struct, os, itertools
+import struct, os
 
 from webob.multidict import MultiDict
-from ..utils import weakproxy, cached_property
+from ..utils import cached_property
 
-from . import convs
 from .perms import DEFAULT_PERMISSIONS
 from .media import FormMedia
-from .fields import _get_fields, _get_widgets
+from .base import HasFields
 
 
 class FormEnvironment(object):
@@ -29,7 +28,7 @@ class FormValidationMetaClass(type):
         return type.__new__(mcs, name, bases, dict_)
 
 
-class Form(object):
+class Form(HasFields):
 
     template = 'forms/default'
     media = FormMedia()
@@ -51,8 +50,7 @@ class Form(object):
 
         # clone all fields
         self.fields = [field(parent=self) for field in self.fields]
-        self.widgets = _get_widgets(self.fields)
-        self.fields = _get_fields(self.fields)
+        HasFields.__init__(self)
 
         if permissions is None:
             permissions = self.permissions
