@@ -84,5 +84,34 @@ class TestNoFieldWidget(TestFormClass):
                          [widgets.FieldBlock, Field.widget, FieldSet.widget, 
                           FieldList.widget, widgets.NoFieldWidget])
 
+    def test_render_no_field(self):
+        widget_text = jinja2.Markup('<div>widget</div>')
+        class TestForm(Form):
+            fields = [
+                widgets.NoFieldWidget(render=lambda: widget_text)
+            ]
+        form = TestForm(self.env)
+        render = form.render()
+        html = self.parse(render)
+        self.assert_(xpath.find('.//*:div[text()="widget"]', html))
+
+    def test_render_field_block(self):
+        widget_text = jinja2.Markup('<div>widget</div>')
+        class TestForm(Form):
+            fields = [
+                widgets.FieldBlock('Title', fields=[
+                    widgets.NoFieldWidget(render=lambda: widget_text),
+                    Field('f1'),
+                ],
+                classname="block"),
+            ]
+
+        form = TestForm(self.env)
+        render = form.render()
+        html = self.parse(render)
+
+        self.assertEqual(xpath.findvalue('.//*:div[@class="block"]/*:h2/text()', html), 'Title')
+        self.assert_(xpath.find('.//*:div[@class="block"]//*:input[@name="f1"]', html))
+        self.assert_(xpath.find('.//*:div[@class="block"]//*:div[text()="widget"]', html))
 
 

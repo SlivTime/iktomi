@@ -1,21 +1,21 @@
-{% for widget in form.widgets %}
+{% for widget in form.widgets -%}
 <p class="form-row" {% if widget.render_type=="hidden" %}style="display: none"{% endif %}>
-  {% if widget.error %}
+  {%- if widget.error %}
   <span class="error">{{ widget.error }}</span>
-  {% endif %}
+  {%- endif %}
 
-  {% if widget.render_type == 'checkbox' %}
-    {{ widget.render()|safe }}
-    {% if widget.label %}
+  {%- if widget.render_type == 'checkbox' %}
+    {{- widget.render()|safe }}
+    {%- if widget.label %}
+    <label for="{{ widget.id }}">{{ widget.label }}</label>
+    {%- endif %}
+  {%- elif widget.render_type == 'hidden' %}
+    {{- widget.render()|safe }}
+  {%- else %}
+    {%- if widget.label %}
     <label for="{{ widget.id }}">{{ widget.label }}</label>
     {% endif %}
-  {% elif widget.render_type == 'hidden' %}
-    {{ widget.render()|safe }}
-  {% else %}
-    {% if widget.label %}
-    <label for="{{ widget.id }}">{{ widget.label }}</label>
-    {% endif %}
-    {{ widget.render()|safe }}
-  {% endif %}
+    {{- widget.render()|safe }}
+  {%- endif %}
 </p>
 {% endfor %}
