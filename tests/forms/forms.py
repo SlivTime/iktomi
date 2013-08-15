@@ -135,7 +135,6 @@ class FormErrorsTests(unittest.TestCase):
                 Field('third', convs.Int()),
             ]
         form = _Form()
-        print '\n\n\n\n\n', form.fields
         self.assert_(not form.accept(MultiDict(**{'set.first': '2d', 'set.second': '', 'third': '3f'})))
         self.assertEqual(form.python_data, {'set': {'first': 1, 'second': 2}, 'third': None})
         self.assertEqual(form.errors, {'set.second': convs.Int.error_required, 
