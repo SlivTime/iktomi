@@ -533,6 +533,10 @@ class List(Converter):
 
 
 class ListOf(Converter):
+    '''
+    Usage:
+        ListOf(Converter(), *validators_and_filters, **kwargs)
+    '''
 
     multiple = True
 
