@@ -1,4 +1,5 @@
 {% for widget in form.widgets -%}
+{%- if widget.readable -%}
 <p class="form-row" {% if widget.render_type=="hidden" %}style="display: none"{% endif %}>
   {%- if widget.error %}
   <span class="error">{{ widget.error }}</span>
@@ -18,4 +19,5 @@
     {{- widget.render()|safe }}
   {%- endif %}
 </p>
+{%- endif -%}
 {% endfor %}

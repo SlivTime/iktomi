@@ -32,6 +32,10 @@ class Widget(object):
     def parent(self):
         return self.field
 
+    @cached_property
+    def readable(self):
+        return self.field.readable
+
     @property
     def multiple(self):
         return self.parent.multiple
@@ -78,7 +82,7 @@ class Widget(object):
         Renders widget to template
         '''
         data = self.prepare_data()
-        if self.field.readable:
+        if self.readable:
             return self.env.template.render(self.template, **data)
         return ''
 
@@ -221,6 +225,7 @@ class NoFieldWidget(Widget):
     field = None
     label = None
     error = None
+    readable = True
 
     def __init__(self, parent=None, **kwargs):
         self.parent = weakproxy(parent)
@@ -229,10 +234,6 @@ class NoFieldWidget(Widget):
 
     def get_raw_value(self):
         return None
-
-    def render(self):
-        data = self.prepare_data()
-        return self.env.template.render(self.template, **data)
 
     def prepare_data(self):
         return dict(widget=self)
@@ -258,6 +259,10 @@ class FieldBlock(NoFieldWidget, HasFields):
         ))
         NoFieldWidget.__init__(self, **kwargs)
         HasFields.__init__(self)
+
+    @cached_property
+    def readable(self):
+        return any(x.readable for x in self.widgets)
 
     def get_media(self):
         '''

@@ -1,4 +1,5 @@
 {% for widget in form.widgets %}
+{%- if widget.readable -%}
   {% if widget.error %}
   <tr class="error-row">
     <td colspan="2">
@@ -34,6 +35,6 @@
       {{ widget.render()|safe }}
     </td>
   {% endif %}
-
   </tr>
+{%- endif -%}
 {% endfor %}
