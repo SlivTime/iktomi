@@ -196,10 +196,21 @@ class FieldListWidget(AggregateWidget):
 
     template = 'widgets/fieldlist'
 
+    def get_media(self):
+        media = Widget.get_media(self)
+        media += self.field.field.widget.get_media()
+        return media
+
 
 class FieldSetWidget(AggregateWidget):
 
     template = 'widgets/fieldset'
+
+    def get_media(self):
+        media = Widget.get_media(self)
+        for widget in self.field.widgets:
+            media += widget.get_media()
+        return media
 
 
 class NoFieldWidget(Widget):
@@ -247,6 +258,16 @@ class FieldBlock(NoFieldWidget, HasFields):
         ))
         NoFieldWidget.__init__(self, **kwargs)
         HasFields.__init__(self)
+
+    def get_media(self):
+        '''
+        Returns a list of FormMedia objects related to the block and
+        all of it's widgets
+        '''
+        media = FormMedia(self.media, env=self.env)
+        for widget in self.widgets:
+            media += widget.get_media()
+        return media
 
     def __add__(self, x):
         # XXX is this needed?

@@ -9,7 +9,6 @@ from . import convs
 from ..utils import cached_property
 from ..utils.odict import OrderedDict
 from .perms import FieldPerm
-from .media import FormMedia
 from .base import HasFields
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ class BaseField(object):
     '''
 
     # obsolete parameters from previous versions
-    _obsolete = frozenset(['default', 'get_default', 'template'])
+    _obsolete = frozenset(['default', 'get_default', 'template', 'media'])
 
     #: :class:`FieldPerm` instance determining field's access permissions.
     #: Can be set by field inheritance or throught constructor.
@@ -34,7 +33,6 @@ class BaseField(object):
     conv = convs.Char
     widget = widgets.TextInput
     label = None
-    media = FormMedia()
 
     def __init__(self, name, conv=None, parent=None, **kwargs):
         if self._obsolete & set(kwargs):
@@ -113,18 +111,6 @@ class BaseField(object):
     @cached_property
     def readable(self):
         return 'r' in self.permissions
-
-    @property
-    def render_type(self):
-        return self.widget.render_type
-
-    def render(self):
-        return self.widget.render()
-
-    def get_media(self):
-        media = FormMedia(self.media)
-        media += self.widget.get_media()
-        return media
 
 
 class Field(BaseField):
@@ -244,12 +230,6 @@ class FieldSet(AggregateField, HasFields):
                                     field.from_python(result[field.name]))
         return self.conv.accept(result)
 
-    def get_media(self):
-        media = BaseField.get_media(self)
-        for field in self.fields:
-            media += field.get_media()
-        return media
-
 
 class FieldList(AggregateField):
     '''
@@ -330,12 +310,7 @@ class FieldList(AggregateField):
         # XXX looks like a HACK
         field.set_raw_value(self.form.raw_data,
                             field.from_python(field.get_initial()))
-        return field.render()
-
-    def get_media(self):
-        media = BaseField.get_media(self)
-        media += self.field.get_media()
-        return media
+        return field.widget.render()
 
 
 class FileField(Field):

@@ -96,11 +96,11 @@ class Form(HasFields):
     def get_media(self):
         '''
         Returns a list of FormMedia objects related to the form and
-        all of it's fields
+        all of it's widgets
         '''
         media = FormMedia(self.media, env=self.env)
-        for field in self.fields:
-            media += field.get_media()
+        for widget in self.widgets:
+            media += widget.get_media()
         return media
 
     def accept(self, data):
