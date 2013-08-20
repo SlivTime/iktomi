@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from time import time
-import struct, os, itertools
+import struct, os
 
 from webob.multidict import MultiDict
-from ..utils import weakproxy, cached_property
+from ..utils import cached_property
 
-from . import convs
 from .perms import DEFAULT_PERMISSIONS
 from .media import FormMedia
-from .fields import FieldBlock
 
 
 class FormEnvironment(object):
@@ -111,16 +109,20 @@ class Form(object):
                 field.set_raw_value(self.raw_data, field.from_python(value))
         return self.is_valid
 
+    class _ChildFields(object):
+        # Fields in name scope of current FieldSet/FieldBlock/Form
+        # used in get_field, in initial values loading, etc
+        def __get__(self, inst, cls):
+            slf = inst or cls
+            return sum([x.fields_to_accept for x in slf.fields], [])
+    child_fields = _ChildFields()
+
     def get_field(self, name):
         '''
         Gets field by input name
         '''
         names = name.split('.', 1)
-        for field in self.fields:
-            if isinstance(field, FieldBlock):
-                result = field.get_field(name)
-                if result is not None:
-                    return result
+        for field in self.child_fields:
             if field.name == names[0]:
                 if len(names) > 1:
                     return field.get_field(names[1])

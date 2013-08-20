@@ -56,6 +56,10 @@ class BaseField(object):
         return self.__class__(**params)
 
     @property
+    def fields_to_accept(self):
+        return [self]
+
+    @property
     def multiple(self):
         return self.conv.multiple
 
@@ -211,17 +215,19 @@ class FieldSet(AggregateField):
         ))
         BaseField.__init__(self, **kwargs)
 
+    @cached_property
+    def child_fields(self):
+        # Fields in name scope of current FieldSet/FieldBlock/Form
+        # used in get_field, in initial values loading, etc
+        return sum([x.fields_to_accept for x in self.fields], [])
+
     @property
     def prefix(self):
         return self.input_name+'.'
 
     def get_field(self, name):
         names = name.split('.', 1)
-        for field in self.fields:
-            if isinstance(field, FieldBlock):
-                result = field.get_field(name)
-                if result is not None:
-                    return result
+        for field in self.child_fields:
             if field.name == names[0]:
                 if len(names) > 1:
                     return field.get_field(names[1])
@@ -268,6 +274,11 @@ class FieldBlock(FieldSet):
     def accept(self):
         result = FieldSet.accept(self)
         return result[self.name]
+
+    @property
+    def fields_to_accept(self):
+        # XXX bad name of property
+        return sum([x.fields_to_accept for x in self.fields], [])
 
     def load_initial(self, initial, raw_data):
         result = {}
